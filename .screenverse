@@ -2,6 +2,7 @@
 
 export AWS_REGION=us-east-2
 
+# wrap optionally logging ingo an aws account, set via AWS_DEFAULT_PROFILE, used in scripts below
 aws-login() {
   SSO_ACCOUNT=$(aws sts get-caller-identity --query "Account")
 
@@ -13,9 +14,39 @@ aws-login() {
   fi
 }
 
-# alias s-deploy="export AWS_DEFAULT_PROFILE=power && echo 'defaulting to AWS power profile, be careful' &&  aws-login && docker run --rm --privileged docker/binfmt:a7996909642ee92942dcd6cff44b9b95f08dad64 && copilot deploy && alert 'YO DEPLOY FINISHED'"
+# quick access to deploy and remote, notably the `docker run` part is a workaround for some docker multiarch
+# incompatibility which is unneeded on ARM64 machines and may go away for me at some point
+#alias s-deploy="export AWS_DEFAULT_PROFILE=power && echo 'defaulting to AWS power profile, be careful' &&  aws-login && docker run --rm --privileged docker/binfmt:a7996909642ee92942dcd6cff44b9b95f08dad64 && copilot deploy && alert 'YO DEPLOY FINISHED'"
 alias s-deploy="export AWS_DEFAULT_PROFILE=power && echo 'defaulting to AWS power profile, be careful' &&  aws-login && copilot deploy && alert 'YO DEPLOY FINISHED'"
-alias s-remote="export AWS_DEFAULT_PROFILE=power && echo 'defaulting to AWS power profile, be careful' &&  aws-login && copilot svc exec"
-s-console() {
-    docker compose run "$1" ash
+
+s-remote() {
+  local project=$(basename "$PWD")
+
+  export AWS_DEFAULT_PROFILE=power && echo 'defaulting to AWS power profile, be careful' &&  aws-login && copilot svc exec -n $project -c "/bin/sh bin/$project remote"
 }
+
+s-remote-cli() {
+  local project=$(basename "$PWD")
+
+  # TODO make `s-remote` use this basically
+  export AWS_DEFAULT_PROFILE=power && echo 'defaulting to AWS power profile, be careful' &&  aws-login && copilot svc exec
+}
+
+# docker comppse is just so much to type
+alias s-up="docker compose up -d"
+
+s-console() {
+  local project="${1:-$(basename "$PWD")}"
+
+  docker compose exec $project ash
+}
+
+# running 2 commands after another to get started working on a project? never!
+s-work() {
+  local project="${1:-$(basename "$PWD")}"
+  s-up "$project"
+  s-console "$project"
+}
+
+# Files created inside of docker are owned by some other user, but they are MINE!
+alias mine="sudo chown -R tobi ."
