@@ -57,6 +57,7 @@ echo '. "$HOME/.asdf/completions/asdf.bash"' >> ~/.bashrc
 git config --global user.name "Tobias Pfeiffer"
 git config --global user.email pragtob@gmail.com
 git config --global init.defaultBranch main
+git config --global mergetool.keepBackup false
 
 sudo apt-get install meld
 git config --global merge.tool meld
