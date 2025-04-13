@@ -62,6 +62,10 @@ git config --global mergetool.keepBackup false
 sudo apt-get install meld
 git config --global merge.tool meld
 
+# global gitignore
+git config --global core.excludesFile '~/.gitignore'
+echo ".vscode/" > ~/.gitignore
+
 sudo apt -y install keepassx
 
 # ssh
